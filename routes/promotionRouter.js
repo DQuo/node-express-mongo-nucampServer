@@ -6,10 +6,10 @@ const promotionRouter = express.Router();
 promotionRouter.route('/')
   .get((req, res, next) => {
     Promotion.find()
-    .then((partners) => {
+    .then((promotions) => {
       res.statusCode = 200;
       res.setHeader('Content-Type', 'application/json');
-      res.json(partners);
+      res.json(promotions);
     })
     .catch((err) => next(err));
   })
