@@ -37,6 +37,34 @@ partnerRouter.route('/')
     .catch((err) => next(err));
   });
 
+
+  partnerRouter.route('/getFeaturedPartnersCount')
+  .get((req, res, next) => {
+    Partner.find()
+    .then((partners) => {
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/json');
+      const filterArr = partners.filter((item, idx) => {
+        return item.featured === true;
+      })
+      res.json(filterArr.length);
+    })
+    .catch((err) => next(err));
+  });
+
+
+  partnerRouter.route('/deletePartner')
+  .delete((req, res, next) => {
+    Partner.deleteOne({ name: req.body.name })
+    .then((response) => {
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/json');
+      res.json(response);
+    })
+    .catch((err) => next(err));
+  });
+
+
 partnerRouter.route('/:partnerId')
   .get((req, res, next) => {
     Partner.findById(req.params.partnerId)
@@ -73,6 +101,7 @@ partnerRouter.route('/:partnerId')
     })
     .catch((err) => next(err));
   });
+
 
 
 module.exports = partnerRouter;
