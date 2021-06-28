@@ -8,10 +8,10 @@ router.get('/', function(req, res, next) {
 });
 
 router.post('/signup', (req, res, next) => {
-  User.findOne({ username: req.body.name })
+  User.findOne({ username: req.body.username })
     .then((user) => {
       if (user) {
-        const err = new Error(`User ${req.body.name} already exists!`);
+        const err = new Error(`User ${req.body.username} already exists!`);
         err.status = 403;
         return next(err);
       }
@@ -32,7 +32,7 @@ router.post('/signup', (req, res, next) => {
 });
 
 router.post('/login', (req, res, next) => {
-  if (!req.sessions.user) {
+  if (!req.session.user) {
     const authHeader = req.headers.authorization;
 
     if (!authHeader) {
