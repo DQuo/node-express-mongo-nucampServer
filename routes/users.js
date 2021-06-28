@@ -7,6 +7,9 @@ router.get('/', function(req, res, next) {
   res.send('respond with a resource');
 });
 
+
+// Sign Up User
+
 router.post('/signup', (req, res, next) => {
   User.findOne({ username: req.body.username })
     .then((user) => {
@@ -30,6 +33,9 @@ router.post('/signup', (req, res, next) => {
     })
     .catch((err) => next(err));
 });
+
+
+// Login User
 
 router.post('/login', (req, res, next) => {
   if (!req.session.user) {
@@ -73,6 +79,8 @@ router.post('/login', (req, res, next) => {
     res.end(`You are already authenticated!`);
   }
 });
+
+// Logout User
 
 router.get('/logout', (req, res, next) => {
   if (req.session) {
