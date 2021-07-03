@@ -1,5 +1,6 @@
 const express = require('express');
 const Campsite = require('../models/campsite');
+
 const authenticate = require('../authenticate');
 
 const campsiteRouter = express.Router();
@@ -17,7 +18,8 @@ campsiteRouter.route('/')
       })
       .catch((err) => next(err));
   })
-  .post(authenticate.verifyUser, (req, res, next) => {
+  .post(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
+    console.log(req.user);
     Campsite.create(req.body)
       .then((campsite) => {
         console.log('Campsite Created', campsite);
@@ -31,7 +33,7 @@ campsiteRouter.route('/')
     res.statusCode = 403;
     res.end('PUT operation not supported on /campsites');
   })
-  .delete(authenticate.verifyUser, (req, res, next) => {
+  .delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     Campsite.deleteMany()
       .then((response) => {
         res.statusCode = 200;
@@ -58,7 +60,7 @@ campsiteRouter.route('/:campsiteId')
     res.statusCode = 403;
     res.end(`POST operation not supported on /campsites/${req.params.campsiteId}`);
   })
-  .put(authenticate.verifyUser, (req, res, next) => {
+  .put(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     Campsite.findByIdAndUpdate(
       req.params.campsiteId,
       { $set: req.body },
@@ -71,7 +73,7 @@ campsiteRouter.route('/:campsiteId')
     })
     .catch((err) => next(err));
   })
-  .delete(authenticate.verifyUser, (req, res, next) => {
+  .delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     Campsite.findByIdAndDelete(req.params.campsiteId)
       .then((response) => {
         res.statusCode = 200;
@@ -126,7 +128,7 @@ campsiteRouter.route('/:campsiteId/comments')
     res.statusCode = 403;
     res.end(`PUT operation not supported on /campsites/${req.params.campsiteId}/comments`);
   })
-  .delete(authenticate.verifyUser, (req, res, next) => {
+  .delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     Campsite.findById(req.params.campsiteId).then((campsite) => {
       if (campsite) {
           for (let i = (campsite.comments.length - 1); i >= 0; i--) {
@@ -180,13 +182,25 @@ campsiteRouter.route('/:campsiteId/comments/:commentId')
   .put(authenticate.verifyUser, (req, res, next) => {
     Campsite.findById(req.params.campsiteId).then((campsite) => {
       if (campsite && campsite.comments.id(req.params.commentId)) {
-        if (req.body.rating) {
-          campsite.comments.id(req.params.commentId).rating = req.body.rating;
+        console.log(req.user);
+
+        // Check if user is author of comment
+        if (req.user._id.equals(campsite.comments.id(req.params.commentId).author._id)) {
+          if (req.body.rating) {
+            campsite.comments.id(req.params.commentId).rating = req.body.rating;
+          }
+          if (req.body.text) {
+            campsite.comments.id(req.params.commentId).text = req.body.text;
+          }
         }
-        if (req.body.text) {
-          campsite.comments.id(req.params.commentId).text = req.body.text;
+        else {
+          const err = new Error('You are not the author of this comment. Err: PROHIBITED');
+          err.status = 404;
+          return next(err);
         }
 
+          
+      
         campsite.save().then((campsite) => {
           res.statusCode = 200;
           res.setHeader('Content-Type', 'application/json');
@@ -210,7 +224,15 @@ campsiteRouter.route('/:campsiteId/comments/:commentId')
   .delete(authenticate.verifyUser, (req, res, next) => {
     Campsite.findById(req.params.campsiteId).then((campsite) => {
       if (campsite && campsite.comments.id(req.params.commentId)) {
-        campsite.comments.id(req.params.commentId).remove();
+
+        if (req.user._id.equals(campsite.comments.id(req.params.commentId).author._id)) {
+          campsite.comments.id(req.params.commentId).remove();
+        }
+        else {
+          const err = new Error('You are not the author of this comment. Err: DELETETION PROHIBITED');
+          err.status = 404;
+          return next(err);
+        }
 
         campsite.save().then((campsite) => {
           res.statusCode = 200;
