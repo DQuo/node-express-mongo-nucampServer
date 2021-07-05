@@ -199,8 +199,6 @@ campsiteRouter.route('/:campsiteId/comments/:commentId')
           return next(err);
         }
 
-          
-      
         campsite.save().then((campsite) => {
           res.statusCode = 200;
           res.setHeader('Content-Type', 'application/json');
@@ -229,7 +227,7 @@ campsiteRouter.route('/:campsiteId/comments/:commentId')
           campsite.comments.id(req.params.commentId).remove();
         }
         else {
-          const err = new Error('You are not the author of this comment. Err: DELETETION PROHIBITED');
+          const err = new Error('You are not the author of this comment. Err: DELETION PROHIBITED');
           err.status = 404;
           return next(err);
         }
